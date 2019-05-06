@@ -1,0 +1,5 @@
+nibabel
+scikit-image
+elasticdeform
+matplotlib
+scipy
