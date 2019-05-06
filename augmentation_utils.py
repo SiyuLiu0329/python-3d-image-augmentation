@@ -1,20 +1,12 @@
 import numpy as np
 import scipy.ndimage as ndimage
-import matplotlib.pyplot as plt
 import random
-import inspect
 import skimage.transform as transform
 from scipy.stats import truncnorm
 from elasticdeform import deform_random_grid
 
-# *_std: std for truncated norm
-CONFIG = {
-    "rotation_std": 20,
-    "shift_stds": [20, 20, 20],
-    "elastic_sigma_std": 3,
-    "elastic_points": [3, 4, 5],
-    "swirl_strength_std": 1
-}
+
+AXES = [(0, 1), (1, 2), (0, 2)]
 
 
 def to_channels(arr):
@@ -44,8 +36,8 @@ def rotate(img, deg, ax, is_mask):
     return round_mask(img) if is_mask else img
 
 
-def random_rotation_fn():
-    d = scale_truncated_norm(CONFIG["rotation_std"])
+def random_rotation_fn(std):
+    d = scale_truncated_norm(std)
     a = random.choice(AXES)
     return lambda img, is_mask: rotate(img, d, a, is_mask)
 
@@ -63,9 +55,8 @@ def shift(img, shifts, is_mask):
     return img.reshape(img.shape + (1,))
 
 
-def random_shift_fn():
-    shifts = CONFIG["shift_stds"]
-    shifts = [scale_truncated_norm(s) for s in shifts]
+def random_shift_fn(shift_stds):
+    shifts = [scale_truncated_norm(s) for s in shift_stds]
     return lambda img, is_mask: shift(img, shifts, is_mask)
 
 
@@ -76,9 +67,9 @@ def elastic_deform(img, mask, sigma, points):
     return img, round_mask(mask)
 
 
-def random_elastic_deform_fn():
-    sigma = scale_truncated_norm(CONFIG["elastic_sigma_std"])
-    points = np.random.choice(CONFIG["elastic_points"])
+def random_elastic_deform_fn(sigma_std, possible_points):
+    sigma = scale_truncated_norm(sigma_std)
+    points = np.random.choice(possible_points)
     return lambda img, mask: elastic_deform(img, mask, sigma, points)
 
 
@@ -102,11 +93,9 @@ def swirl(img, ax, strenght, radius, is_mask):
     return swapped
 
 
-def random_swirl_fn():
+def random_swirl_fn(strength_std, r):
     ax = random.choice(AXES)
-    r = 300
-    s = CONFIG["swirl_strength_std"]
-    s = scale_truncated_norm(s)
+    s = scale_truncated_norm(strength_std)
     return lambda img, is_mask: swirl(img, ax, s, r, is_mask)
 
 
@@ -120,57 +109,3 @@ def round_mask(m):
 def scale_truncated_norm(std):
     res = truncnorm.rvs(-1, 1, loc=0, scale=std, size=1)
     return res
-
-
-AXES = [(0, 1), (1, 2), (0, 2)]
-MODES = [random_elastic_deform_fn, random_swirl_fn,
-         random_shift_fn, random_rotation_fn]
-
-
-def do_aug(x, y, debug=False):
-    fn = random.choice(MODES)()
-    fn_args = inspect.getargspec(fn).args
-    if "img" in fn_args and "mask" in fn_args:
-        x, y = fn(x, y)
-    else:
-        x, y = fn(x, False), fn(y, True)
-    if debug:
-        debug_show(x, y, fn)
-    return x, y
-
-
-def apply_augmentation(x_batch, y_batch, debug=False):
-    # x_batch: (?, w, h, d, 1)
-    # y_batch: (?, w, h, d, c)
-    assert len(x_batch) == len(y_batch)
-    for i in range(len(x_batch)):
-        x, y = x_batch[i], y_batch[i]
-        x, y = do_aug(x, y, debug=debug)
-
-        x_batch[i] = x
-        y_batch[i] = y
-
-    return x_batch, y_batch,
-
-
-def debug_show(x, y, fn):
-    # x: (w, h, d, 1)
-    # y: (w, h, d, c)
-    y = combine_channels(y)
-    w, h, d, _ = x.shape
-    plt.figure(figsize=(20, 8))
-    plt.subplot(1, 3, 1)
-    plt.imshow(x[w//2, :, :, 0], cmap='gray')
-    plt.imshow(y[w//2, :, :, 0], alpha=0.4)
-
-    ax = plt.subplot(1, 3, 2)
-    ax.set_title(str(fn))
-    plt.imshow(x[:, :, d//2, 0], cmap='gray')
-    plt.imshow(y[:, :, d//2, 0], alpha=0.4)
-
-    plt.subplot(1, 3, 3)
-    plt.imshow(x[:, h//2, :, 0], cmap='gray')
-    plt.imshow(y[:, h//2, :, 0], alpha=0.4)
-
-    plt.show()
-    plt.close()
