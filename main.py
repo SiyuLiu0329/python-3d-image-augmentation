@@ -5,9 +5,9 @@ from augmentation_utils import to_channels
 
 
 if __name__ == "__main__":
-    img1 = nib.load('crop/PAT001_HIRF_Prisma_20171122_scan.nii.gz').get_fdata()
+    img1 = nib.load('').get_fdata()
     seg1 = nib.load(
-        'crop/PAT001_HIRF_Prisma_20171122_segment.nii.gz').get_fdata()
+        '').get_fdata()
 
     # use the same image multiple times to simulate a batch
     img1 = img1.reshape(img1.shape + (1,))
@@ -17,11 +17,17 @@ if __name__ == "__main__":
     seg1 = to_channels(seg1)
     seg = np.stack([seg1, seg1, seg1], axis=0)
     augmentor = Augmentor()
-    # augmentor.add_rotation_fn(20)
-    # augmentor.add_shift_fn([20, 20, 20])
-    # augmentor.add_elastic_deformation_fn(3, [3, 4, 5])
-    # augmentor.add_swirl_fn(1, 300)
+    augmentor.add_rotation_fn(20)
+    augmentor.add_shift_fn([20, 20, 20])
+    augmentor.add_elastic_deformation_fn(3, [3, 4, 5])
+    augmentor.add_swirl_fn(1, 300)
     augmentor.add_affine_warp_fn(10)
+    # augmentor.add_sequence().add_rotation_fn(20).add_shift_fn(
+    #     [20, 20, 20]).add_elastic_deformation_fn(3, [3, 4, 5]).end_sequence()
 
+    # augmentor.add_sequence().add_rotation_fn(45).add_shift_fn(
+    #     [50, 50, 50]).add_elastic_deformation_fn(8, [12, 16, 20]).end_sequence()
+
+    augmentor.summary()
     while True:
         augmentor.apply_augmentation_to_batch(img, seg, debug=True)
