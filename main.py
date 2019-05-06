@@ -21,6 +21,7 @@ if __name__ == "__main__":
     # augmentor.add_shift_fn([20, 20, 20])
     # augmentor.add_elastic_deformation_fn(3, [3, 4, 5])
     # augmentor.add_swirl_fn(1, 300)
+    augmentor.add_affine_warp_fn(10)
 
     while True:
         augmentor.apply_augmentation_to_batch(img, seg, debug=True)

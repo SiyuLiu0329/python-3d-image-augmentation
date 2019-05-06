@@ -42,7 +42,29 @@ def random_rotation_fn(std):
     return lambda img, is_mask: rotate(img, d, a, is_mask)
 
 
-### shift ###
+### Random Affine ###
+def random_affine_warp_fn(vertex_percentage_std):
+    source_points = [[0, 0, 0], [0, 100, 0], [0, 0, 100], [100, 0, 0]]
+    dest_points = np.array([
+        [v + scale_truncated_norm(vertex_percentage_std)[0] for v in p] for p in source_points])
+    return lambda img, is_mask: affine_warp(img, source_points, dest_points, is_mask)
+
+
+def affine_warp(img, src, dest, is_mask):
+    mat, _, _, _ = np.linalg.lstsq(src, dest, rcond=None)
+    mat = np.array([np.append(row, 0) for row in mat])
+    mat = np.concatenate([mat, [[0, 0, 0, 1]]], axis=0)
+    if is_mask:
+        _, _, _, channels = img.shape
+        res = [ndimage.affine_transform(img[:, :, :, c], mat)
+               for c in range(channels)]
+        res = np.stack(res, axis=-1)
+        return round_mask(res)
+    img = ndimage.affine_transform(img[:, :, :, 0], mat)
+    return img.reshape(img.shape + (1,))
+
+
+### Shift ###
 def shift(img, shifts, is_mask):
     if is_mask:
         _, _, _, channels = img.shape
@@ -73,7 +95,7 @@ def random_elastic_deform_fn(sigma_std, possible_points):
     return lambda img, mask: elastic_deform(img, mask, sigma, points)
 
 
-# Swirl
+### Swirl ###
 def swirl(img, ax, strenght, radius, is_mask):
     ax1, ax2 = ax
     swapped = np.swapaxes(img, ax1, ax2)

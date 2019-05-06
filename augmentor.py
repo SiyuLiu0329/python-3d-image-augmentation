@@ -2,7 +2,7 @@ import random
 import inspect
 import inspect
 import matplotlib.pyplot as plt
-from augmentation_utils import random_elastic_deform_fn, random_rotation_fn, random_shift_fn, random_swirl_fn, combine_channels
+from augmentation_utils import random_affine_warp_fn, random_elastic_deform_fn, random_rotation_fn, random_shift_fn, random_swirl_fn, combine_channels
 
 
 class Augmentor:
@@ -10,6 +10,8 @@ class Augmentor:
         self._augmentation_fns = []
 
     def apply_augmentation_to_batch(self, x_batch, y_batch, debug=False):
+        # x: (w, h, d, 1)
+        # y: (w, h, d, c)
         if len(self._augmentation_fns) == 0:
             raise ValueError(
                 "The augmentor does not have any augmentation function - add augmentation functions before applying augmentation.")
@@ -36,6 +38,10 @@ class Augmentor:
     def add_elastic_deformation_fn(self, sigma_std, possible_points):
         self._augmentation_fns.append(
             lambda: random_elastic_deform_fn(sigma_std, possible_points))
+
+    def add_affine_warp_fn(self, vertex_percentage_std):
+        self._augmentation_fns.append(
+            lambda: random_affine_warp_fn(vertex_percentage_std))
 
     def _do_aug(self, x, y, debug=False):
         fn = random.choice(self._augmentation_fns)()
