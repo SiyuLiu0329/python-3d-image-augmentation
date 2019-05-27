@@ -32,15 +32,15 @@ def combine_channels(arr):
 
 def random_linear_gradient_fn(stds):
     gx, gy, gz = [scale_truncated_norm(s) for s in stds]
-    return lambda img, is_maks: linear_gradient(img, gx, gy, gz, is_maks)
+    return lambda img, is_maks: apply_gradient(img, lambda x, y, z: - 0.05 * y * y + 2 * y, is_maks)
 
 
-def linear_gradient(img, gx, gy, gz, is_mask):
+def apply_gradient(img, gradient_fn, is_mask):
     if is_mask:
         # no need to apply augmentation to masks
         return img
 
-    d1, d2, d3, _ = img.shape
+    d1, d2, _, _ = img.shape
     min_value = np.min(img)
     max_value = np.max(img)
     def to_coord(index):
@@ -52,7 +52,7 @@ def linear_gradient(img, gx, gy, gz, is_mask):
 
     def pixel_fn(index, value):
         x, y, z = to_coord(index)
-        new_value = value - 0.05 * y * y + 2 * y
+        new_value = value + gradient_fn(x, y, z)
         if new_value > max_value:
             return max_value
         elif new_value < min_value:
