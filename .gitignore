@@ -3,3 +3,4 @@
 crop/
 *.ipynb
 __pycache__
+*.nii.gz

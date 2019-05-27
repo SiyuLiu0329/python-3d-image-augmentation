@@ -2,7 +2,7 @@ import random
 import inspect
 import inspect
 import matplotlib.pyplot as plt
-from augmentation_utils import random_affine_warp_fn, random_elastic_deform_fn, random_rotation_fn, random_shift_fn, random_swirl_fn, combine_channels
+import augmentation_utils as aug_utils
 
 
 class Augmentor:
@@ -46,7 +46,7 @@ class Augmentor:
 
         return x_batch, y_batch,
 
-    def _sequencial_handler(self, fn):
+    def _fn_handler(self, fn):
         if self._sequencial_cacahe is not None:
             self._sequencial_cacahe.append(fn)
         else:
@@ -54,25 +54,35 @@ class Augmentor:
         return self
 
     def add_rotation_fn(self, std):
-        return self._sequencial_handler(lambda: random_rotation_fn(std))
+        return self._fn_handler(lambda: aug_utils.random_rotation_fn(std))
 
     def add_shift_fn(self, shift_stds):
-        return self._sequencial_handler(lambda: random_shift_fn(shift_stds))
+        return self._fn_handler(lambda: aug_utils.random_shift_fn(shift_stds))
 
     def add_swirl_fn(self, strength_std, radius):
-        return self._sequencial_handler(lambda: random_swirl_fn(strength_std, radius))
+        return self._fn_handler(lambda: aug_utils.random_swirl_fn(strength_std, radius))
 
     def add_elastic_deformation_fn(self, sigma_std, possible_points):
-        return self._sequencial_handler(
-            lambda: random_elastic_deform_fn(sigma_std, possible_points))
+        return self._fn_handler(
+            lambda: aug_utils.random_elastic_deform_fn(sigma_std, possible_points))
 
     def add_affine_warp_fn(self, vertex_percentage_std):
-        return self._sequencial_handler(
-            lambda: random_affine_warp_fn(vertex_percentage_std))
+        return self._fn_handler(
+            lambda: aug_utils.random_affine_warp_fn(vertex_percentage_std))
+
+    def add_linear_gradient_fn(self, gradient_stds):
+        assert len(gradient_stds) == 3
+        return self._fn_handler(
+            lambda: aug_utils.random_linear_gradient_fn(gradient_stds))
 
     def _do_aug(self, x, y, debug=False, fn=None):
+        # calling this function will set the augmentation parameters
         fn = random.choice(self._augmentation_fns)() if fn is None else fn
+
+        # some augmentation functions require the img and the mask to be process at the same time
         fn_args = inspect.getargspec(fn).args
+
+        # apply augmentation by calling
         if "img" in fn_args and "mask" in fn_args:
             x, y = fn(x, y)
         else:
@@ -88,7 +98,7 @@ class Augmentor:
     def _debug_show(self, x, y, fn):
         # x: (w, h, d, 1)
         # y: (w, h, d, c)
-        y = combine_channels(y)
+        y = aug_utils.combine_channels(y)
         w, h, d, _ = x.shape
         plt.figure(figsize=(20, 8))
         plt.subplot(1, 3, 1)
