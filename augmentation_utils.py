@@ -75,7 +75,7 @@ def rotate(img, deg, ax, is_mask):
     return round_mask(img) if is_mask else img
 
 
-def random_rotation_fn(std):
+def random_uniaxial_rotation_fn(std):
     d = scale_truncated_norm(std)
     a = random.choice(AXES)
     return lambda img, is_mask: rotate(img, d, a, is_mask)

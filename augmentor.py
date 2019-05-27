@@ -53,8 +53,8 @@ class Augmentor:
             self._augmentation_fns.append(fn)
         return self
 
-    def add_rotation_fn(self, std):
-        return self._fn_handler(lambda: aug_utils.random_rotation_fn(std))
+    def add_uniaxial_rotation_fn(self, std):
+        return self._fn_handler(lambda: aug_utils.random_uniaxial_rotation_fn(std))
 
     def add_shift_fn(self, shift_stds):
         return self._fn_handler(lambda: aug_utils.random_shift_fn(shift_stds))

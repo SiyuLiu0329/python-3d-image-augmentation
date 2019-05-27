@@ -16,7 +16,7 @@ if __name__ == "__main__":
     seg = np.stack([seg1, seg1, seg1], axis=0)
     augmentor = Augmentor()
     augmentor.add_linear_gradient_fn([1, 1, 1])
-    # augmentor.add_rotation_fn(22)
+    # augmentor.add_uniaxial_rotation_fn(22)
     # augmentor.add_shift_fn([30, 30, 30])
     # augmentor.add_elastic_deformation_fn(3, [3, 4, 5, 6])
     # augmentor.add_swirl_fn(1.2, 300)
