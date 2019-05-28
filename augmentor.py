@@ -1,8 +1,6 @@
 import random
-import inspect
-import inspect
 import matplotlib.pyplot as plt
-import utils as aug_utils
+from utils import combine_channels, normalize
 from augmentations.rotation import Rotation
 from augmentations.shifts import Shifts
 from augmentations.swirl import Swirl
@@ -15,8 +13,10 @@ from augmentations.sequence_queue import SequenceQueue
 
 class Augmentor:
     def __init__(self):
-        self._augmentation_fns = []
+        self._augmentations = []
         self._sequence_queue = None
+        self.normalise_x = True
+        self.normalise_y = False
 
     def add_sequence(self):
         assert self._sequence_queue is None
@@ -27,7 +27,7 @@ class Augmentor:
         sequence = self._sequence_queue
         assert sequence is not None
         assert len(sequence) != 0
-        self._augmentation_fns.append(self._sequence_queue)
+        self._augmentations.append(self._sequence_queue)
         self._sequence_queue = None
         return self
 
@@ -38,7 +38,7 @@ class Augmentor:
             x_batch = x_batch.copy()
             y_batch = y_batch.copy()
 
-        if len(self._augmentation_fns) == 0:
+        if len(self._augmentations) == 0:
             raise ValueError(
                 "The augmentor does not have any augmentation function - add augmentation functions before applying augmentation.")
         assert len(x_batch) == len(y_batch)
@@ -54,7 +54,7 @@ class Augmentor:
         if self._sequence_queue is not None:
             self._sequence_queue.enque(operation)
         else:
-            self._augmentation_fns.append(operation)
+            self._augmentations.append(operation)
         return self
 
     def add_uniaxial_rotation(self, std):
@@ -80,20 +80,26 @@ class Augmentor:
         return self._augmentation_handler(BezierLUT(xs, ys, degree))
 
     def _do_aug(self, x, y, debug=False):
-        fn = random.choice(self._augmentation_fns)
-        x, y = fn.execute(x, y)
+        aug = random.choice(self._augmentations)
+        x, y = aug.execute(x, y)
         if debug:
-            self._debug_show(x, y, fn)
+            self._debug_show(x, y, aug)
+
+        if self.normalise_x:
+            x = normalize(x)
+        if self.normalise_y:
+            y = normalize(y)
+
         return x, y
 
     def summary(self):
         print("=" * 15 + " Augmentation Functions " + "=" * 15)
-        [print(fn) for fn in self._augmentation_fns]
+        [print(aug) for aug in self._augmentations]
 
     def _debug_show(self, x, y, fn):
         # x: (w, h, d, 1)
         # y: (w, h, d, c)
-        y = aug_utils.combine_channels(y)
+        y = combine_channels(y)
         w, h, d, _ = x.shape
         plt.figure(figsize=(20, 8))
         plt.subplot(1, 3, 1)

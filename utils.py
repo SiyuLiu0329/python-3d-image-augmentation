@@ -20,6 +20,10 @@ def combine_channels(arr):
     return res
 
 
+def normalize(img):
+    return (img - img.mean()) / img.std()
+
+
 def round_mask(m):
     m[m > 0.5] = 1
     m[m <= 0.5] = 0
