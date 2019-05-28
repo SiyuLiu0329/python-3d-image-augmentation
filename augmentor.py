@@ -2,38 +2,42 @@ import random
 import inspect
 import inspect
 import matplotlib.pyplot as plt
-import augmentation_utils as aug_utils
+import utils as aug_utils
+from augmentations.rotation import Rotation
+from augmentations.shifts import Shifts
+from augmentations.swirl import Swirl
+from augmentations.elastic_deformation import ElasticDeformation
+from augmentations.affline_warp import AffineWarp
+from augmentations.gradient import LinearGradient
+from augmentations.lut import BezierLUT
+from augmentations.sequence_queue import SequenceQueue
 
 
 class Augmentor:
     def __init__(self):
         self._augmentation_fns = []
-        self._sequencial_cacahe = None
+        self._sequence_queue = None
 
     def add_sequence(self):
-        assert self._sequencial_cacahe is None
-        self._sequencial_cacahe = []
+        assert self._sequence_queue is None
+        self._sequence_queue = SequenceQueue()
         return self
 
     def end_sequence(self):
-        sequence = self._sequencial_cacahe
+        sequence = self._sequence_queue
         assert sequence is not None
         assert len(sequence) != 0
-        self._augmentation_fns.append(
-            lambda: self.execute_sequence_fn(sequence))
-        self._sequencial_cacahe = None
+        self._augmentation_fns.append(self._sequence_queue)
+        self._sequence_queue = None
         return self
 
-    def execute_sequence_fn(self, sequence):
-        def execute_sequence(img, mask):
-            for fn in sequence:
-                img, mask = self._do_aug(img, mask, debug=False, fn=fn())
-            return img, mask
-        return execute_sequence
-
-    def apply_augmentation_to_batch(self, x_batch, y_batch, debug=False):
+    def apply_augmentation_to_batch(self, x_batch, y_batch, copy=True, debug=False):
         # x: (w, h, d, 1)
         # y: (w, h, d, c)
+        if copy:
+            x_batch = x_batch.copy()
+            y_batch = y_batch.copy()
+
         if len(self._augmentation_fns) == 0:
             raise ValueError(
                 "The augmentor does not have any augmentation function - add augmentation functions before applying augmentation.")
@@ -46,50 +50,38 @@ class Augmentor:
 
         return x_batch, y_batch,
 
-    def _fn_handler(self, fn):
-        if self._sequencial_cacahe is not None:
-            self._sequencial_cacahe.append(fn)
+    def _augmentation_handler(self, operation):
+        if self._sequence_queue is not None:
+            self._sequence_queue.enque(operation)
         else:
-            self._augmentation_fns.append(fn)
+            self._augmentation_fns.append(operation)
         return self
 
-    def add_uniaxial_rotation_fn(self, std):
-        return self._fn_handler(lambda: aug_utils.random_uniaxial_rotation_fn(std))
+    def add_uniaxial_rotation(self, std):
+        return self._augmentation_handler(Rotation(std))
 
-    def add_shift_fn(self, shift_stds):
-        return self._fn_handler(lambda: aug_utils.random_shift_fn(shift_stds))
+    def add_shifts(self, shift_stds):
+        return self._augmentation_handler(Shifts(shift_stds))
 
-    def add_swirl_fn(self, strength_std, radius):
-        return self._fn_handler(lambda: aug_utils.random_swirl_fn(strength_std, radius))
+    def add_uniaxial_swirl(self, strength_std, radius):
+        return self._augmentation_handler(Swirl(strength_std, radius))
 
-    def add_elastic_deformation_fn(self, sigma_std, possible_points):
-        return self._fn_handler(
-            lambda: aug_utils.random_elastic_deform_fn(sigma_std, possible_points))
+    def add_elastic_deformation(self, sigma_std, possible_points):
+        return self._augmentation_handler(ElasticDeformation(sigma_std, possible_points))
 
-    def add_affine_warp_fn(self, vertex_percentage_std):
-        return self._fn_handler(
-            lambda: aug_utils.random_affine_warp_fn(vertex_percentage_std))
+    def add_affine_warp(self, vertex_percentage_std):
+        return self._augmentation_handler(AffineWarp(vertex_percentage_std))
 
-    def add_linear_gradient_fn(self, gradient_stds):
+    def add_linear_gradient(self, gradient_stds):
         assert len(gradient_stds) == 3
-        return self._fn_handler(
-            lambda: aug_utils.random_linear_gradient_fn(gradient_stds))
+        return self._augmentation_handler(LinearGradient(gradient_stds))
 
-    def add_random_bezier_lut_fn(self, xs, ys, degree=2):
-        return self._fn_handler(lambda: aug_utils.random_bezier_lut_fn(xs, ys, degree))
+    def add_bezier_lut(self, xs, ys, degree=2):
+        return self._augmentation_handler(BezierLUT(xs, ys, degree))
 
-    def _do_aug(self, x, y, debug=False, fn=None):
-        # calling this function will set the augmentation parameters
-        fn = random.choice(self._augmentation_fns)() if fn is None else fn
-
-        # some augmentation functions require the img and the mask to be process at the same time
-        fn_args = inspect.getargspec(fn).args
-
-        # apply augmentation by calling
-        if "img" in fn_args and "mask" in fn_args:
-            x, y = fn(x, y)
-        else:
-            x, y = fn(x, False), fn(y, True)
+    def _do_aug(self, x, y, debug=False):
+        fn = random.choice(self._augmentation_fns)
+        x, y = fn.execute(x, y)
         if debug:
             self._debug_show(x, y, fn)
         return x, y
