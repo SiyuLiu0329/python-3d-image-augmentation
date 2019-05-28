@@ -3,6 +3,8 @@ import scipy.ndimage as ndimage
 import random
 import skimage.transform as transform
 import itertools
+import bezier
+import matplotlib.pyplot as plt
 from scipy.stats import truncnorm
 from elasticdeform import deform_random_grid
 
@@ -27,12 +29,41 @@ def combine_channels(arr):
         res[:, :, :, 0][arr[:, :, :, i] == 1] = i
     return res
 
+
+### LUT ###
+def apply_bezier_lut(img, curve, is_mask):
+    if is_mask:
+        return img
+    img = (img - img.min()) / (img.max() - img.min())
+
+    def lut_fn(value):
+        return curve.evaluate(value)[1]
+
+    img = np.vectorize(lut_fn)(img)
+    return img
+
+
+def random_bezier_lut_fn(xs, ys, degree):
+    xs = [0.0] + xs + [1.0]
+    ys = [0.0] + ys + [1.0]
+    nodes = np.asfortranarray([
+        xs, ys
+    ])
+    curve = bezier.Curve(nodes, degree=degree)
+    # debug
+    x = np.linspace(0, 1, 50)
+    plt.plot(x, curve.evaluate_multi(x)[1, :])
+    plt.scatter(xs, ys)
+    plt.show()
+
+    return lambda img, is_mask: apply_bezier_lut(img, curve, is_mask)
+
 ### Gradient ###
 
 
 def random_linear_gradient_fn(stds):
-    gx, gy, gz = [scale_truncated_norm(s) for s in stds]
-    return lambda img, is_maks: apply_gradient(img, lambda x, y, z: - 0.05 * y * y + 2 * y, is_maks)
+    gx, gy, gz = [scale_truncated_norm(s)[0] for s in stds]
+    return lambda img, is_mask: apply_gradient(img, lambda x, y, z: gx * x + gy * y + gz * z, is_mask)
 
 
 def apply_gradient(img, gradient_fn, is_mask):
@@ -43,8 +74,8 @@ def apply_gradient(img, gradient_fn, is_mask):
     d1, d2, _, _ = img.shape
     min_value = np.min(img)
     max_value = np.max(img)
-    def to_coord(index):
 
+    def to_coord(index):
         y, z = index // d1, index % d1
         x = y // d2
         y = y % d2

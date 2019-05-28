@@ -75,6 +75,9 @@ class Augmentor:
         return self._fn_handler(
             lambda: aug_utils.random_linear_gradient_fn(gradient_stds))
 
+    def add_random_bezier_lut_fn(self, xs, ys, degree=2):
+        return self._fn_handler(lambda: aug_utils.random_bezier_lut_fn(xs, ys, degree))
+
     def _do_aug(self, x, y, debug=False, fn=None):
         # calling this function will set the augmentation parameters
         fn = random.choice(self._augmentation_fns)() if fn is None else fn
