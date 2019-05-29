@@ -16,13 +16,13 @@ if __name__ == "__main__":
     seg = np.stack([seg1, seg1, seg1], axis=0)
     augmentor = Augmentor()
 
-    # augmentor.add_elastic_deformation(30, [6])
+    # augmentor.add_elastic_deformation(3, [6])
     # augmentor.add_affine_warp(20)
     # augmentor.add_uniaxial_swirl(10, 300)
     # augmentor.add_uniaxial_rotation(22)
     # augmentor.add_shifts([30, 30, 30])
     # augmentor.add_linear_gradient([3, 3, 3])
-    augmentor.add_bezier_lut([0.2, 0.5, 0.7], [0, 1, 0], degree=2)
+    augmentor.add_bezier_lut([0.5, 0.9], [1, 0], degree=2)
 
     # augmentor.add_sequence().add_uniaxial_rotation(20).add_shifts(
     #     [20, 20, 20]).add_elastic_deformation(3, [3, 4, 5]).end_sequence()
