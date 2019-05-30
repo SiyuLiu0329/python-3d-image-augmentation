@@ -14,11 +14,11 @@ from augmentations.sequence_queue import SequenceQueue
 
 
 class Augmentor:
-    def __init__(self):
+    def __init__(self, normalise_x=True, normalise_y=False):
         self._augmentations = []
         self._sequence_queue = None
-        self.normalise_x = True
-        self.normalise_y = False
+        self.normalise_x = normalise_x
+        self.normalise_y = normalise_y
 
     def add_sequence(self):
         assert self._sequence_queue is None
