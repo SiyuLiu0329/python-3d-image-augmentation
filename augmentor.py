@@ -1,5 +1,7 @@
 import random
-import matplotlib.pyplot as plt
+import nibabel as nib
+import os
+import numpy as np
 from utils import combine_channels, normalize
 from augmentations.rotation import Rotation
 from augmentations.shifts import Shifts
@@ -44,7 +46,9 @@ class Augmentor:
         assert len(x_batch) == len(y_batch)
         for i in range(len(x_batch)):
             x, y = x_batch[i], y_batch[i]
-            x, y = self._do_aug(x, y, debug=debug)
+            x, y = self._do_aug(x, y)
+            if debug:
+                self._save_debug_img(x, y, i)
             x_batch[i] = x
             y_batch[i] = y
 
@@ -76,15 +80,13 @@ class Augmentor:
         assert len(gradient_stds) == 3
         return self._augmentation_handler(LinearGradient(gradient_stds))
 
-    def add_bezier_lut(self, xs, ys, degree=2):
-        return self._augmentation_handler(BezierLUT(xs, ys, degree))
+    def add_bezier_lut(self, xs, ys, y_std, degree=2):
+        assert len(xs) == len(ys)
+        return self._augmentation_handler(BezierLUT(xs, ys, y_std, degree))
 
-    def _do_aug(self, x, y, debug=False):
+    def _do_aug(self, x, y):
         aug = random.choice(self._augmentations)
         x, y = aug.execute(x, y)
-        if debug:
-            self._debug_show(x, y, aug)
-
         if self.normalise_x:
             x = normalize(x)
         if self.normalise_y:
@@ -96,24 +98,14 @@ class Augmentor:
         print("=" * 15 + " Augmentation Functions " + "=" * 15)
         [print(aug) for aug in self._augmentations]
 
-    def _debug_show(self, x, y, fn):
+    def _save_debug_img(self, x, y, idx):
         # x: (w, h, d, 1)
         # y: (w, h, d, c)
         y = combine_channels(y)
-        w, h, d, _ = x.shape
-        plt.figure(figsize=(20, 8))
-        plt.subplot(1, 3, 1)
-        plt.imshow(x[w//2, :, :, 0], cmap='gray')
-        plt.imshow(y[w//2, :, :, 0], alpha=0.4)
-
-        ax = plt.subplot(1, 3, 2)
-        ax.set_title(str(fn))
-        plt.imshow(x[:, :, d//2, 0], cmap='gray')
-        plt.imshow(y[:, :, d//2, 0], alpha=0.4)
-
-        plt.subplot(1, 3, 3)
-        plt.imshow(x[:, h//2, :, 0], cmap='gray')
-        plt.imshow(y[:, h//2, :, 0], alpha=0.4)
-
-        plt.show()
-        plt.close()
+        x = nib.Nifti1Image(x, np.eye(4))
+        y = nib.Nifti1Image(y, np.eye(4))
+        debug_dir = "debug"
+        if not os.path.exists(debug_dir):
+            os.mkdir(debug_dir)
+        nib.save(x, os.path.join(debug_dir, "%d.nii" % idx))
+        nib.save(y, os.path.join(debug_dir, "%d_seg.nii" % idx))

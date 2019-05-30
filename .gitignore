@@ -4,3 +4,5 @@ crop/
 *.ipynb
 __pycache__
 *.nii.gz
+debug/
+.DS_Store

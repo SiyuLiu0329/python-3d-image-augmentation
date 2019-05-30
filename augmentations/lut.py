@@ -1,20 +1,22 @@
 import numpy as np
 import bezier
+# import matplotlib.pyplot as plt
 from augmentations.base_augmentation import BaseAugmentation
-from utils import scale_truncated_norm, round_mask
+from utils import scale_truncated_norm
 from scipy import ndimage
-import matplotlib.pyplot as plt
 
 
 class BezierLUT(BaseAugmentation):
-    def __init__(self, xs, ys, degree):
+    def __init__(self, xs, ys, y_std, degree):
         self.xs = xs
         self.ys = ys
+        self.y_std = y_std
         self.degree = degree
         super().__init__()
 
     def execute(self, image, mask):
-        fn = random_bezier_lut_fn(self.xs, self.ys, self.degree)
+        fn = random_bezier_lut_fn(
+            self.xs, self.ys, self.y_std, self.degree)
         return fn(image, False), fn(mask, True)
 
 
@@ -72,9 +74,9 @@ def apply_bezier_lut(img, curve, is_mask):
 
     lut = LUT.from_bezier_curve(curve)
 
-    x = np.linspace(0, 1, 100)
-    plt.plot(x, [lut.look_up(e) for e in x])
-    plt.show()
+    # x = np.linspace(0, 1, 100)
+    # plt.plot(x, [lut.look_up(e) for e in x])
+    # plt.show()
 
     def lut_fn(value):
         return lut.look_up(value)
@@ -83,9 +85,19 @@ def apply_bezier_lut(img, curve, is_mask):
     return img
 
 
-def random_bezier_lut_fn(xs, ys, degree):
+def random_bezier_lut_fn(xs, ys, y_std, degree):
+    def apply_variability(value, std):
+        res = value + scale_truncated_norm(std)[0]
+        if res > 1:
+            res = 1
+        if res < 0:
+            res = 0
+        return res
+
+    ys = [apply_variability(value, y_std) for value in ys]
     xs = [0.0] + xs + [1.0]
     ys = [0.0] + ys + [1.0]
+    # print(ys)
     nodes = np.asfortranarray([
         xs, ys
     ])
