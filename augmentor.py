@@ -14,6 +14,11 @@ from augmentations.sequence_queue import SequenceQueue
 
 
 class Augmentor:
+    """
+    Apply random augmentations to images. Parameters are sampled at random from truncated normal distributions!
+    NOTE: all normal distributions used in this work are truncted norms!
+    """
+
     def __init__(self, normalise_x=True, normalise_y=False):
         self._augmentations = []
         self._sequence_queue = None
@@ -62,25 +67,68 @@ class Augmentor:
         return self
 
     def add_uniaxial_rotation(self, std):
+        """
+        Perform random uniaxial rotation. rotation axes are choosing at random (1 of the 3 dimensions).
+
+        Args:
+            std (float): standard dividation used for sampling rotation angles (in degrees). 
+                Rotation angles are sampled from a normal distribution N~(0, std^2)
+        """
         return self._augmentation_handler(Rotation(std))
 
     def add_shifts(self, shift_stds):
+        """
+        Perform random shifts along on or more axes.
+
+        Args:
+            shift_stds ([float, float, float]): a list of 3 floats. Shift magnitudes (in pixels) are sampled from a normal distribution N~(0, std^2)
+                - shift_stds[0]: standard dividation used for sampling shifts along the first dimension of the image,
+                - shift_stds[1]: standard dividation used for sampling shifts along the second dimension of the image,
+                - shift_stds[2]: standard dividation used for sampling shifts along the third dimension of the image.
+        """
         return self._augmentation_handler(Shifts(shift_stds))
 
     def add_uniaxial_swirl(self, strength_std, radius):
+        """
+        Perform uniaxial swirl. Swirls are symmetrical and centred.
+
+        Args:
+            strength_std (float): standard dividation used for sampling swirl strengths. Swirl strengths are sampled from a normal 
+                distribution N~(0, std^2) (recommend using debug mode to inspect the effect should usually be a small number less than 10). 
+            radius (int): swirl radius -  this is a fixed value and there is no randomness involved.
+        """
         return self._augmentation_handler(Swirl(strength_std, radius))
 
     def add_elastic_deformation(self, sigma_std, possible_points):
+        """
+        Perform random elastic deform.
+        Args:
+            sigma_std (float): standard deviation of the normal distribution (affects deformation strengths)
+            possible_points ([int, int, int...]): list of integers > 0. The Augmentor will randomly select an integer N from the list
+                and apply deformations at N random points in the image.
+
+        """
         return self._augmentation_handler(ElasticDeformation(sigma_std, possible_points))
 
     def add_affine_warp(self, vertex_percentage_std):
+        """
+        Perform random affine warping. This operation uses the original image's 4 corners (v1, v2, v3, v4) as the source vertices, shifts are applied to these vertices to acquire the destination vertices (v1', v2', v3', v4'). We then apply affline transform to map (v1, v2, v3, v4) to (v1', v2', v3', v4')
+
+        Args:
+            vertex_percentage_std (float): standard dividation used for sampling shifts for each vertex.
+                for each dimension of v:
+                    percentage ~ N(0, vertex_percentage_std^2)
+                    v' = v + (1 + percentage)
+        """
         return self._augmentation_handler(AffineWarp(vertex_percentage_std))
 
     def add_linear_gradient(self, gradient_stds):
+        # Work in progress -> need to validate effectiveness
         assert len(gradient_stds) == 3
         return self._augmentation_handler(LinearGradient(gradient_stds))
 
     def add_bezier_lut(self, xs, ys, y_std, degree=2):
+        # Work in progress -> need to validate effectiveness
         assert len(xs) == len(ys)
         return self._augmentation_handler(BezierLUT(xs, ys, y_std, degree))
 
