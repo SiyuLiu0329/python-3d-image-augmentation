@@ -20,7 +20,7 @@ def rotate(img, deg, ax, is_mask):
     ax1, ax2 = ax
     if ax1 > 2 or ax2 > 2:
         raise NotImplementedError
-    img = ndimage.rotate(img, deg, ax, reshape=False, prefilter=True)
+    img = ndimage.rotate(img, deg[0], ax, reshape=False, prefilter=True)
     return round_mask(img) if is_mask else img
 
 
