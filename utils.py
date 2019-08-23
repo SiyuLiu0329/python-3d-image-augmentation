@@ -31,5 +31,5 @@ def round_mask(m):
 
 
 def scale_truncated_norm(std):
-    res = truncnorm.rvs(-1, 1, loc=0, scale=std, size=1)
+    res = truncnorm.rvs(-1, 1, loc=0, scale=std, size=1)[0]
     return res
