@@ -31,5 +31,7 @@ class AffineWarp(BaseAugmentation):
                    for c in range(channels)]
             res = np.stack(res, axis=-1)
             return round_mask(res)
+        
         img = ndimage.affine_transform(img[:, :, :, 0], mat)
+        
         return img.reshape(img.shape + (1,))

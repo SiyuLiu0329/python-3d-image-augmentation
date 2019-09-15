@@ -8,21 +8,22 @@ categorical = False
 
 if __name__ == "__main__":
     img1 = nib.load(path+'seg_4.nii.gz').get_fdata()
-    seg1 = nib.load(path+'seg_5.nii.gz').get_fdata()
+    seg1 = nib.load(path+'seg_4.nii.gz').get_fdata()
     # use the same image multiple times to simulate a batch
-    #~ img1 = img1.reshape(img1.shape + (1,))
+#    img1 = img1.reshape(img1.shape + (1,))
     img = np.stack([img1, img1, img1], axis=0)
+    print("Batch Shape:", img.shape)
 
     # seg1 = seg1.reshape(seg1.shape + (1,))
     if categorical:
         seg1 = to_channels(seg1)
     seg = np.stack([seg1, seg1, seg1], axis=0)
     augmentor = Augment3D(categorical=categorical)
-    augmentor.add_elastic_deformation(8, [3, 4, 5, 6])
+#    augmentor.add_elastic_deformation(8, [3, 4, 5, 6])
     # augmentor.add_elastic_deformation(3, [3, 4, 5, 6])
-    augmentor.add_affine_warp(10)
-    augmentor.add_uniaxial_swirl(3, 300)
-    augmentor.add_uniaxial_rotation(20)
+    augmentor.add_affine_warp(15)
+#    augmentor.add_uniaxial_swirl(3, 300)
+    augmentor.add_uniaxial_rotation(15)
     augmentor.add_shifts([20, 20, 20])
     # augmentor.add_bezier_lut([0.3, 0.6], [0.3, 0.6], 0.45, degree=2)
     # augmentor.add_bezier_lut([0.3, 0.6], [0.3, 0.6], 0.15, degree=2)
