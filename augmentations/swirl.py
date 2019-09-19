@@ -2,7 +2,7 @@ import random
 import numpy as np
 import skimage.transform as transform
 from augmentations.base_augmentation import BaseAugmentation
-from utils import scale_truncated_norm, round_mask
+from utils import scale_truncated_norm, round_mask, round_mask_semantic
 #from scipy import ndimage
 
 AXES = [(0, 1), (1, 2), (0, 2)]
@@ -35,6 +35,9 @@ class Swirl(BaseAugmentation):
                                   strength=strenght, radius=radius)
         swapped = swapped.reshape(swapped.shape + (1,))
         swapped = np.swapaxes(swapped, ax1, ax2)
+        
+        if is_mask and not self.categorical:
+            img = round_mask_semantic(img)
         
         return swapped
 

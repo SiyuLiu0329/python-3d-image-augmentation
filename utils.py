@@ -30,6 +30,10 @@ def round_mask(m):
     return m
 
 
+def round_mask_semantic(m):
+    return np.around(m)
+
+
 def scale_truncated_norm(std):
     res = truncnorm.rvs(-1, 1, loc=0, scale=std, size=1)
     return res

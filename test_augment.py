@@ -7,7 +7,7 @@ path = "data/"
 categorical = False
 
 if __name__ == "__main__":
-    img1 = nib.load(path+'seg_4.nii.gz').get_fdata()
+    img1 = nib.load(path+'case_4.nii.gz').get_fdata()
     seg1 = nib.load(path+'seg_4.nii.gz').get_fdata()
     # use the same image multiple times to simulate a batch
 #    img1 = img1.reshape(img1.shape + (1,))

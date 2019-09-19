@@ -1,6 +1,6 @@
 import random
 from augmentations.base_augmentation import BaseAugmentation
-from utils import scale_truncated_norm, round_mask
+from utils import scale_truncated_norm, round_mask, round_mask_semantic
 from scipy import ndimage
 
 AXES = [(0, 1), (1, 2), (0, 2)]
@@ -27,7 +27,10 @@ class Rotation(BaseAugmentation):
             raise NotImplementedError
         img = ndimage.rotate(img, deg[0], ax, reshape=False, prefilter=True)
         
-        if is_mask and self.categorical:
-            round_mask(img)
+        if is_mask:
+            if self.categorical:
+                return round_mask(img)
+            else:
+                return round_mask_semantic(img)
         
         return img
