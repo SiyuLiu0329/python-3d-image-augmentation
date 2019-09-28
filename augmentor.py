@@ -109,7 +109,7 @@ class Augment3D:
                 and apply deformations at N random points in the image.
 
         """
-        return self._augmentation_handler(ElasticDeformation(sigma_std, possible_points))
+        return self._augmentation_handler(ElasticDeformation(sigma_std, possible_points, self.categorical))
 
     def add_affine_warp(self, vertex_percentage_std):
         """
