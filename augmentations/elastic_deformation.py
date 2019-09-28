@@ -1,7 +1,7 @@
 #import random
 import numpy as np
 from augmentations.base_augmentation import BaseAugmentation
-from utils import scale_truncated_norm, round_mask
+from utils import scale_truncated_norm, round_mask, round_mask_semantic
 #from scipy import ndimage
 from elasticdeform import deform_random_grid
 
@@ -24,6 +24,8 @@ class ElasticDeformation(BaseAugmentation):
         
         if self.categorical:
             mask = round_mask(mask)
+        else:
+            mask = round_mask_semantic(mask)
         
         return img, mask
 
