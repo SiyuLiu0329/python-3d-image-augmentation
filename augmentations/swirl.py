@@ -22,22 +22,27 @@ class Swirl(BaseAugmentation):
     def swirl(self, img, ax, strenght, radius, is_mask):
         ax1, ax2 = ax
         swapped = np.swapaxes(img, ax1, ax2)
-        if is_mask and self.categorical:
-            _, _, _, channels = img.shape
-            swapped = [transform.swirl(swapped[:, :, :, c], rotation=0,
-                                       strength=strenght, radius=radius)
-                       for c in range(channels)]
-            swapped = np.stack(swapped, axis=-1)
-            swapped = np.swapaxes(swapped, ax1, ax2)
-            return round_mask(swapped)
+        
+        order = 3 #bspline interp
+        if is_mask:
+            order = 0 #NN interp
+            if self.categorical:
+                _, _, _, channels = img.shape
+                swapped = [transform.swirl(swapped[:, :, :, c], rotation=0,
+                                           strength=strenght, radius=radius, order=order)
+                           for c in range(channels)]
+                swapped = np.stack(swapped, axis=-1)
+                swapped = np.swapaxes(swapped, ax1, ax2)
+#                return round_mask(swapped)
+                return swapped #no rounding req as NN interp
     
         swapped = transform.swirl(swapped[:, :, :, 0], rotation=0,
-                                  strength=strenght, radius=radius)
+                                  strength=strenght, radius=radius, order=order)
         swapped = swapped.reshape(swapped.shape + (1,))
         swapped = np.swapaxes(swapped, ax1, ax2)
         
-        if is_mask and not self.categorical:
-            img = round_mask_semantic(img)
+#        if is_mask and not self.categorical:
+#            img = round_mask_semantic(img)
         
         return swapped
 

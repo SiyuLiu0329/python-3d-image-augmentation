@@ -20,16 +20,21 @@ class Shifts(BaseAugmentation):
         return fn(image, False), fn(mask, True)
     
     def shift(self, img, shifts, is_mask):
-        if is_mask and self.categorical:
-            _, _, _, channels = img.shape
-            res = [ndimage.shift(img[:, :, :, c], shifts)
-                   for c in range(channels)]
-            res = np.stack(res, axis=-1)
-            return round_mask(res)
+        order = 3 #bspline interp
+        if is_mask:
+            order = 0 #NN interp
+            
+            if self.categorical:
+                _, _, _, channels = img.shape
+                res = [ndimage.shift(img[:, :, :, c], shifts, order=order)
+                       for c in range(channels)]
+                res = np.stack(res, axis=-1)
+#                return round_mask(res)
+                return res #no rounding req as NN interp
     
-        img = ndimage.shift(img[:, :, :, 0], shifts)
+        img = ndimage.shift(img[:, :, :, 0], shifts, order=order)
         
-        if is_mask and not self.categorical:
-            img = round_mask_semantic(img)
+#        if is_mask and not self.categorical:
+#            img = round_mask_semantic(img)
             
         return img.reshape(img.shape + (1,))

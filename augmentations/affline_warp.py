@@ -25,16 +25,21 @@ class AffineWarp(BaseAugmentation):
         mat, _, _, _ = np.linalg.lstsq(src, dest, rcond=None)
         mat = np.array([np.append(row, 0) for row in mat])
         mat = np.concatenate([mat, [[0, 0, 0, 1]]], axis=0)
-        if is_mask and self.categorical:
-            _, _, _, channels = img.shape
-            res = [ndimage.affine_transform(img[:, :, :, c], mat)
-                   for c in range(channels)]
-            res = np.stack(res, axis=-1)
-            return round_mask(res)
         
-        img = ndimage.affine_transform(img[:, :, :, 0], mat)
+        order = 3 #bspline interp
+        if is_mask:
+            order = 0 #NN interp
+            if self.categorical:
+                _, _, _, channels = img.shape
+                res = [ndimage.affine_transform(img[:, :, :, c], mat, order=order)
+                       for c in range(channels)]
+                res = np.stack(res, axis=-1)
+                return res
+#                return round_mask(res)
         
-        if is_mask and not self.categorical:
-            img = round_mask_semantic(img)
+        img = ndimage.affine_transform(img[:, :, :, 0], mat, order=order)
+        
+#        if is_mask and not self.categorical:
+#            img = round_mask_semantic(img)
         
         return img.reshape(img.shape + (1,))

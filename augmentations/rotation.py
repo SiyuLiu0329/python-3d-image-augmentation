@@ -25,12 +25,17 @@ class Rotation(BaseAugmentation):
         ax1, ax2 = ax
         if ax1 > 2 or ax2 > 2:
             raise NotImplementedError
-        img = ndimage.rotate(img, deg[0], ax, reshape=False, prefilter=True)
         
+        order = 3 #bspline interp
         if is_mask:
-            if self.categorical:
-                return round_mask(img)
-            else:
-                return round_mask_semantic(img)
+            order = 0 #NN interp
+            
+        img = ndimage.rotate(img, deg[0], ax, reshape=False, prefilter=True, order=order)
+        
+#        if is_mask:
+#            if self.categorical:
+#                return round_mask(img)
+#            else:
+#                return round_mask_semantic(img)
         
         return img
