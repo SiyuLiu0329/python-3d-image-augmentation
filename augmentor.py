@@ -12,6 +12,7 @@ from augmentations.gradient import LinearGradient
 from augmentations.lut import BezierLUT
 from augmentations.sequence_queue import SequenceQueue
 from augmentations.resize import Rescale, RandomCrop
+from augmentations.identity import Identity
 
 
 class Augmentor:
@@ -38,6 +39,9 @@ class Augmentor:
         self._augmentations.append(self._sequence_queue)
         self._sequence_queue = None
         return self
+
+    def add_identity(self):
+        return self._augmentation_handler(Identity())
 
     def apply_augmentation_to_sample(self, x, y, copy=True, debug=False):
         if copy:
