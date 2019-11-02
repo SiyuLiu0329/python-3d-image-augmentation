@@ -11,6 +11,7 @@ from augmentations.affline_warp import AffineWarp
 from augmentations.gradient import LinearGradient
 from augmentations.lut import BezierLUT
 from augmentations.sequence_queue import SequenceQueue
+from augmentations.resize import Rescale, RandomCrop
 
 
 class Augmentor:
@@ -37,6 +38,18 @@ class Augmentor:
         self._augmentations.append(self._sequence_queue)
         self._sequence_queue = None
         return self
+
+    def apply_augmentation_to_sample(self, x, y, copy=True, debug=False):
+        if copy:
+            x = x.copy()
+            y = y.copy()
+        if len(self._augmentations) == 0:
+            raise ValueError(
+                "The augmentor does not have any augmentation function - add augmentation functions before applying augmentation.")
+        x, y = self._do_aug(x, y)
+        if debug:
+            self._save_debug_img(x, y, 0)
+        return x, y
 
     def apply_augmentation_to_batch(self, x_batch, y_batch, copy=True, debug=False):
         # x: (w, h, d, 1)
@@ -87,6 +100,12 @@ class Augmentor:
                 - shift_stds[2]: standard dividation used for sampling shifts along the third dimension of the image.
         """
         return self._augmentation_handler(Shifts(shift_stds))
+
+    def add_rescale(self, std):
+        return self._augmentation_handler(Rescale(std))
+
+    def add_patch_crop(self, std):
+        return self._augmentation_handler(RandomCrop(std))
 
     def add_uniaxial_swirl(self, strength_std, radius):
         """

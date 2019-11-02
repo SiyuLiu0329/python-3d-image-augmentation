@@ -5,19 +5,21 @@ from utils import to_channels
 
 
 if __name__ == "__main__":
-    img1 = nib.load('test_img.nii.gz').get_fdata()
-    seg1 = nib.load('test_img_seg.nii.gz').get_fdata()
+    img1 = nib.load('PAT001_HIRF_Prisma_20171122_scan.nii.gz').get_fdata()
+    seg1 = nib.load('PAT001_HIRF_Prisma_20171122_segment.nii.gz').get_fdata()
     # use the same image multiple times to simulate a batch
     img1 = img1.reshape(img1.shape + (1,))
-    img = np.stack([img1, img1, img1, img1, img1], axis=0)
+    img = np.stack([img1], axis=0)
 
     # seg1 = seg1.reshape(seg1.shape + (1,))
     seg1 = to_channels(seg1)
-    seg = np.stack([seg1, seg1, seg1, seg1, seg1], axis=0)
+    seg = np.stack([seg1], axis=0)
     augmentor = Augmentor()
     # augmentor.add_elastic_deformation(8, [3, 4, 5, 6])
     # augmentor.add_elastic_deformation(3, [3, 4, 5, 6])
     # augmentor.add_affine_warp(30)
+    augmentor.add_rescale(30)
+    augmentor.add_patch_crop(30)
     # augmentor.add_uniaxial_swirl(3, 300)
     # augmentor.add_uniaxial_rotation(20)
     # augmentor.add_shifts([20, 20, 20])
@@ -30,4 +32,4 @@ if __name__ == "__main__":
     # augmentor.add_linear_gradient([3, 3, 3])
     augmentor.summary()
 
-    augmentor.apply_augmentation_to_batch(img, seg, debug=True)
+    augmentor.apply_augmentation_to_sample(img1, seg1, debug=True)
