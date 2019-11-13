@@ -25,15 +25,12 @@ def normalize(img):
     return (img - img.mean()) / img.std()
 
 
-def round_mask(m):
-    m[m > 0.5] = 1
-    m[m <= 0.5] = 0
-    return m
-
-
 def scale_truncated_norm(std, size=1):
-    res = truncnorm.rvs(-1, 1, loc=0, scale=std, size=size)
-    return res
+    return truncnorm.rvs(-1, 1, loc=0, scale=std, size=size)
+
+
+def round_mask_semantic(m):
+    return np.around(m)
 
 
 def scale3d(i, tar_x, tar_y, tar_z, interpolation):

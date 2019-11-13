@@ -2,7 +2,7 @@ import random
 import numpy as np
 import cv2
 from augmentations.base_augmentation import BaseAugmentation
-from utils import scale_truncated_norm, round_mask, scale3d, to_channels
+from utils import scale_truncated_norm, round_mask_semantic, scale3d, to_channels
 from scipy import ndimage
 
 

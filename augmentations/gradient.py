@@ -2,7 +2,7 @@ import random
 import numpy as np
 import itertools
 from augmentations.base_augmentation import BaseAugmentation
-from utils import scale_truncated_norm, round_mask
+from utils import scale_truncated_norm, round_mask_semantic
 from scipy import ndimage
 
 

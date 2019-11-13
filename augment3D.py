@@ -15,17 +15,18 @@ from augmentations.resize import Rescale, RandomCrop
 from augmentations.identity import Identity
 
 
-class Augmentor:
+class Augment3D:
     """
-    Apply random augmentations to images. Parameters are sampled at random from truncated normal distributions!
+    Apply random augmentations to 3D images. Parameters are sampled at random from truncated normal distributions!
     NOTE: all normal distributions used in this work are truncted norms!
     """
 
-    def __init__(self, normalise_x=True, normalise_y=False):
+    def __init__(self, normalise_x=True, normalise_y=False, categorical=True):
         self._augmentations = []
         self._sequence_queue = None
         self.normalise_x = normalise_x
         self.normalise_y = normalise_y
+        self.categorical = categorical
 
     def add_sequence(self):
         assert self._sequence_queue is None
@@ -91,7 +92,7 @@ class Augmentor:
             std (float): standard dividation used for sampling rotation angles (in degrees). 
                 Rotation angles are sampled from a normal distribution N~(0, std^2)
         """
-        return self._augmentation_handler(Rotation(std))
+        return self._augmentation_handler(Rotation(std, self.categorical))
 
     def add_shifts(self, shift_stds):
         """
@@ -103,7 +104,7 @@ class Augmentor:
                 - shift_stds[1]: standard dividation used for sampling shifts along the second dimension of the image,
                 - shift_stds[2]: standard dividation used for sampling shifts along the third dimension of the image.
         """
-        return self._augmentation_handler(Shifts(shift_stds))
+        return self._augmentation_handler(Shifts(shift_stds, self.categorical))
 
     def add_rescale(self, std):
         return self._augmentation_handler(Rescale(std))
@@ -131,7 +132,7 @@ class Augmentor:
                 and apply deformations at N random points in the image.
 
         """
-        return self._augmentation_handler(ElasticDeformation(sigma_std, possible_points))
+        return self._augmentation_handler(ElasticDeformation(sigma_std, possible_points, self.categorical))
 
     def add_affine_warp(self, vertex_percentage_std):
         """
@@ -143,7 +144,7 @@ class Augmentor:
                     percentage ~ N(0, vertex_percentage_std^2)
                     v' = v + (1 + percentage)
         """
-        return self._augmentation_handler(AffineWarp(vertex_percentage_std))
+        return self._augmentation_handler(AffineWarp(vertex_percentage_std, self.categorical))
 
     def add_linear_gradient(self, gradient_stds):
         # Work in progress -> need to validate effectiveness
@@ -172,7 +173,8 @@ class Augmentor:
     def _save_debug_img(self, x, y, idx):
         # x: (w, h, d, 1)
         # y: (w, h, d, c)
-        y = combine_channels(y)
+        if self.categorical:
+            y = combine_channels(y)
         x = nib.Nifti1Image(x, np.eye(4))
         y = nib.Nifti1Image(y, np.eye(4))
         debug_dir = "debug"
