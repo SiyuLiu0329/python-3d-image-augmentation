@@ -9,6 +9,8 @@ Install required packages: `pip install -r requirements.txt`
 
 - Reshape your images to the format (d1, d2, d3, 1).
 
+- The augmentation parameter are documented in to the function definitions in `augment3D.py`. A formal documentation will be provided when the remaining functionalities are implemented.
+
 - Apply augmentation as the following example:
 ```
 from augmentor import Augmentor
