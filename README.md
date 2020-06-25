@@ -50,3 +50,5 @@ augmentor.summary()
 augmentor.apply_augmentation_to_batch(img, seg, debug=True)
 
 ```
+
+Another usage example can be found in `test_augment.py`.
