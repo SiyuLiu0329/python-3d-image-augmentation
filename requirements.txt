@@ -4,3 +4,4 @@ elasticdeform
 matplotlib
 scipy
 bezier
+skimage
