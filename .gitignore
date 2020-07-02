@@ -1,7 +1,6 @@
 .vscode/
 .ipynb_checkpoints/
 crop/
-*.ipynb
 __pycache__
 *.nii.gz
 debug/

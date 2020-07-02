@@ -122,6 +122,9 @@ class Augment3D:
             radius (int): swirl radius -  this is a fixed value and there is no randomness involved.
         """
         return self._augmentation_handler(Swirl(strength_std, radius))
+    
+    def add_augmentation(self, aug_obj):
+        return self._augmentation_handler(aug_obj)
 
     def add_elastic_deformation(self, sigma_std, possible_points):
         """
