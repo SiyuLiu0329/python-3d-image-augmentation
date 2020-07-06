@@ -10,3 +10,8 @@ Install required packages: `pip install -r requirements.txt`
 
 # Usage
 Please refer to the included `demo.ipynb` for example usage.
+
+# Citation 
+```
+S.  Liu,  W.  Dai,  C.  Engstrom,  J.  Fripp,  P.  B.  Greer,  S.  Crozier,J. A. Dowling, and S. S. Chand ra, “Fabric Image RepresentationEncoding Networks for Large-scale 3D Medical Image Analysis,”arXiv e-prints, p. arXiv:2006.15578, Jun. 2020.
+```
