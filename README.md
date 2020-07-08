@@ -10,6 +10,6 @@ Please refer to the included `demo.ipynb` for usage examples.
 # Citation 
 ```
 S.  Liu,  W.  Dai,  C.  Engstrom,  J.  Fripp,  P.  B.  Greer,  S.  Crozier,J. A. Dowling, 
-and S. S. Chandra, “Fabric Image RepresentationEncoding Networks for Large-scale 3D Medical 
+and S. S. Chandra, “Fabric Image Representation Encoding Networks for Large-scale 3D Medical 
 Image Analysis,”arXiv e-prints, p. arXiv:2006.15578, Jun. 2020.
 ```
